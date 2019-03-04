@@ -137,7 +137,7 @@ function myVis(data) {
             .attr('font-family', 'sans-serif')
             .text(d => d.label);
 
-    const subtitle = svg.selectAll('.subtitle').data([{label: 'Aggregate amount of aid received from the United States'}]);
+    const subtitle = svg.selectAll('.subtitle').data([{label: 'Agregate amount of aid received from the United States'}]);
 
     subtitle.enter()
             .append('text')

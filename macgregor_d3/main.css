@@ -1,0 +1,47 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+.first,
+.second {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ngo {
+ fill: #00999970;
+}
+
+.non-ngo {
+ fill: #FFCC6670;
+}
+
+.non-ngo:hover {
+fill: orange;
+}
+
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+.feature {
+  fill: #ccc;
+  cursor: pointer;
+}
+
+.feature.active {
+  fill: orange;
+}
+
+.mesh {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

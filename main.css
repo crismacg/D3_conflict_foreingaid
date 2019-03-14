@@ -4,6 +4,7 @@ body {
   height: 100%;
 }
 
+
 .first,
 .second {
   width: 100%;
@@ -13,8 +14,36 @@ body {
   justify-content: center;
 }
 
+h1 {
+    font-family: Calibri;
+    color: grey;
+}
+
+
+h2 {
+    position: absolute;
+    left: 250px;
+    top: 360px;
+    font-size: 1.3em;
+    font-weight: 100;
+    font-family: Calibri;
+    color: grey;
+}
+
 .ngo {
  fill: #00999970;
+}
+
+path {
+  stroke: white;
+  stroke-width: 0.25px;
+  fill: grey;
+}
+
+path#large_country {
+  stroke: white;
+  stroke-width: 0.25px;
+  fill: grey;
 }
 
 .non-ngo {

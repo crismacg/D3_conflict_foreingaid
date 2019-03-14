@@ -14,6 +14,8 @@ d3.json('foreign_aid.geojson', function(error, data) {
       }
   });
 
+
+
 function myVis(data) {
     d3.csv('sample_data.csv', function(error, data2) {
         //Hand CSV data off to global var,
@@ -63,13 +65,7 @@ function myVis(data) {
                 .append('svg')
                 .attr('width', w)
                 .attr('height', h)
-            //    .on("click", stopped, true);
 
-    svg.append("rect")
-        .attr("class", "background")
-        .attr("width", w)
-        .attr("height", h)
-        // .on("click", reset);
 
     var scale  = 220;
     var offset = [w/8.5, h/2.5];
@@ -80,13 +76,124 @@ function myVis(data) {
     var path = d3.geoPath()
              .projection(projection);
 
+    function update_path(data, d) {
+        d3.select('#large_country').remove();
+        //Country characteristics
+        var country_name = d.properties.ADM0_A3
+
+       //Characteristics for scaling projection
+        if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 80) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 80)){temp =  1.5} else if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30)) {temp = 3} else  {temp = 7}
+
+               // Make new projection with scaling
+        var center_ = d3.geoCentroid(d)
+        var projection_temp = d3.geoMercator()
+                                    .scale(scale*temp)
+                                    .center(center_)
+                                    .translate([(w/2)-80,h/2+30])
+                                    ;
+        var path_temp = d3.geoPath().projection(projection_temp);
+
+        //Plotting new path
+        var new_p = svg.selectAll("path#large_country")
+                        .remove()
+                        .data(data.filter(function(country){
+                               return country.properties.ADM0_A3 == country_name;}))
+
+            new_p.enter()
+               .append("path")
+               .transition()
+               .attr("d", path_temp)
+               .style("fill", "#88D9D6")
+               .attr("id",'large_country')
+           }
+
+    function update_text_header(data,d){
+        var country_name = d.properties.ADM0_A3
+        d3.select('h2')
+                .append("text")
+                .attr("text-anchor", "middle")
+                .attr("font-family", "Calibri")
+                .attr("font-size", "13px")
+                .attr("font-weight", "light")
+                .attr("fill", "#929292")
+                .attr('pointer-events', 'none')
+                .text(country_name)
+
+        }
+    function update_points(data,d) {
+        d3.select("#tooltip").remove();
+
+        if  ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 80)
+            ||
+             (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 80))
+            {temp =  1.5} else if
+            ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30)
+            ||
+             (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30))
+            {temp = 3} else
+            {temp = 7}
+
+        // Make new projection with scaling
+        var center_ = d3.geoCentroid(d)
+        var projection_temp = d3.geoMercator()
+                                    .scale(scale*temp)
+                                    .center(center_)
+                                    .translate([(w/2)-80,h/2+30])
+                                    ;
+        var path_temp = d3.geoPath().projection(projection_temp);
+
+        svg.selectAll("circle")
+                   .attr("id", "temp_circle")
+                   .data(dataset2.filter(function(b){
+                   return b.EVENT_ID_CNTY.substring(0,3) == d.properties.ADM0_A3;}))
+                   .enter()
+                   .append("circle")
+                   .attr("cx", function(d) {
+                       return projection_temp([d.LONGITUDE, d.LATITUDE])[0];
+                   })
+                   .attr("cy", function(d) {
+                       return projection_temp([d.LONGITUDE, d.LATITUDE])[1] + 10;
+                   })
+                   .attr("r", 5)
+                   .style("fill", "yellow")
+                   .style("opacity", 0.75)
+
+            .on("mouseover", function(point){
+
+               var xPosition = projection_temp([point.LONGITUDE, point.LATITUDE])[0];
+               var yPosition = projection_temp([point.LONGITUDE, point.LATITUDE])[1];
+               d3.select(this)
+                   .style("fill","#88D9D6")
+
+                svg.append("text")
+                   .attr("id", "tooltip")
+                   .attr("x", xPosition)
+                   .attr("y", yPosition)
+                   .attr("text-anchor", "middle")
+                   .attr("font-family", "Calibri")
+                   .attr("font-size", "13px")
+                   .attr("font-weight", "normal")
+                   .attr("fill", "black")
+                   .text(point.FATALITIES)
+                   ;
+
+               })
+
+            .on("mouseout", function(point){
+                d3.select(this)
+                     .style("fill","yellow")
+                d3.select("#tooltip")
+                     .remove();
+                   });
+             }
+
 
     svg.selectAll("path")
 
         .data(data.filter(function(d){
                 return d.properties.dac_category_name == "total";})
-                  .filter(function(d){
-                    return d.properties.fiscal_year == 2018;}))
+        .filter(function(d){
+                return d.properties.fiscal_year == 2018;}))
         .enter()
         .append("path")
         .attr("d", path)
@@ -101,173 +208,50 @@ function myVis(data) {
                 return "#ccc"
             }
         })
+        .on("mouseover", function(country){
+            country_center = d3.geoCentroid(country)
+            temp = d3.select(this)
+                .style("fill","lightgray")
 
-        .on("mouseover", function(d){
-            // Function for creating points
-            function update() {
-              var s = svg.selectAll("circle")
-                  .attr("id", "temp_circle")
-                  .data(dataset2.filter(function(b){
-                          console.log(b.EVENT_ID_CNTY.substring(0,3))
-                          return b.EVENT_ID_CNTY.substring(0,3) == d.properties.ADM0_A3;}))
+                var xPosition = projection([country_center][0])[0];
+                var yPosition = projection([country_center][0])[1];
 
-                  s.enter()
-                      .append("circle")
-                      .attr("cx", function(d) {
-                      return projection_temp([d.LONGITUDE, d.LATITUDE])[0];
-                      })
-                      .attr("cy", function(d) {
-                      return projection_temp([d.LONGITUDE, d.LATITUDE])[1];
-                      })
-                      .attr("r", 3)
-                      .style("fill", "yellow")
-                      .style("opacity", 0.75)
-
-                    s.exit().remove();
-                };
-
-            // Section for creating the country outline
-            if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 80) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 80)){temp =  1.5} else if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30)) {temp = 3} else  {temp = 7}
-
-            var center_ = d3.geoCentroid(d)
-            var projection_temp = d3.geoMercator()
-                               .scale(scale*temp)
-                               .center(center_)
-                               .translate([(w/2)-80,h/2+30])
-                               ;
-            var path_temp = d3.geoPath().projection(projection_temp);
-
-            d3.select(this)
-                .style("fill","#FFCC66")
-                .attr("d", path_temp)
-
-            // Update circles
-            update();
+            svg.append("text")
+                    .attr("id", "tooltip")
+                    .attr("x", xPosition)
+                    .attr("y", yPosition)
+                    .attr("text-anchor", "middle")
+                    .attr("font-family", "Calibri")
+                    .attr("font-size", "13px")
+                    .attr("font-weight", "light")
+                    .attr("fill", "#929292")
+                    .attr('pointer-events', 'none')
+                    .text(country.properties.ADM0_A3)
+                ;
             })
 
+        .on("mouseout", function(country){
+            d3.select(this)
+               .style('fill', function(d){
+                    var value = d.properties.funding;
+                    if(value){
+                        return color(value)
+                    } else {
+                        return "#ccc"
+                    }})
+            d3.select("#tooltip").remove()
 
-        .on("mouseout", function(d){
-            d3.select("#temp_circle").remove();
-            var value = d.properties.funding;
-            if(value){
-            d3.select(this).style("fill",color(value))
-                            .attr("d", path)
-            } else {
-            d3.select(this).style("fill","ccc")}
-            ;
         })
 
-
-    // General characteristics
-    const title = svg.selectAll('.title')
-                    .data([{label: 'Total aid received'}]);
-    title.enter()
-            .append('text')
-            .attr('class', 'title')
-            .attr('x', d => x_scale_ax(.4))
-            .attr('y', d => y_scale_ax(.03))
-            .attr('font-size', 25)
-            .attr('text-anchor', 'middle')
-            .attr('font-family', 'sans-serif')
-            .text(d => d.label);
-
-    const subtitle = svg.selectAll('.subtitle').data([{label: 'Agregate amount of aid received from the United States'}]);
-
-    subtitle.enter()
-            .append('text')
-            .attr('class', 'subt')
-            .attr('x', d => x_scale_ax(.4))
-            .attr('y', d => y_scale_ax(.055))
-            .attr('text-anchor', 'middle')
-            .attr('font-size', 17)
-            .attr('font-family', 'sans-serif')
-            .text(d => d.label);
-
-    const caption = svg.selectAll('.subtitle').data([{label: 'Source: USAID dataset available at https://explorer.usaid.gov/'}]);
-    caption.enter()
-            .append('text')
-            .attr('class', 'title')
-            .attr('x', d => x_scale_ax(.5))
-            .attr('y', d => y_scale_ax(.9))
-            .attr('text-anchor', 'middle')
-            .attr('font-size', 12)
-            .attr('font-family', 'sans-serif')
-            .text(d => d.label);
-
-    const caption2 = svg.selectAll('.subtitle').data([{label: ' &  ACLED dataset available at https://www.prio.org/Data/Armed-Conflict/'}]);
-
-    caption2.enter()
-            .append('text')
-            .attr('class', 'title')
-            .attr('x', d => x_scale_ax(.5))
-            .attr('y', d => y_scale_ax(.95))
-            .attr('text-anchor', 'middle')
-            .attr('font-size', 12)
-            .attr('font-family', 'sans-serif')
-            .text(d => d.label);
-
-
-/// ADDING POINTS: This is also a test just with a subsample of 600 points, corresponding to the specific type: Violence against civilians.
+        .on('click', function(d) {
+            svg.selectAll("#large_country").remove()
+            svg.selectAll("circle").remove()
+            d3.select("h2").text("");
+            update_path(data, d);
+            update_points(data, d)
+            update_text_header(data,d)
+        });
 
 
 
-    // function points(data2){
-    //     svg.selectAll("circle")
-    //     .data(data2.filter(function(b){
-    //         console.log(b)
-    //             return b.EVENT_ID_CNTY == d.properties.ADM0_A3;})
-    //     .enter()
-    //     .append("circle")
-    //     .attr("cx", function(d) {
-    //     return projection([d.LONGITUDE, d.LATITUDE])[0];
-    //     })
-    //     .attr("cy", function(d) {
-    //     return projection([d.LONGITUDE, d.LATITUDE])[1];
-    //     })
-    //     .attr("r", 3)
-    //     .style("fill", "yellow")
-    //     .style("opacity", 0.75)}
-    //
-    //     .on("mouseover", function(d){
-    //         d3.select(this)
-    //         .style("fill","#88D9D6")
-    //
-    //     var xPosition = projection([d.LONGITUDE, d.LATITUDE])[0];
-    //     var yPosition = projection([d.LONGITUDE, d.LATITUDE])[1];
-    //     svg.append("text")
-    //     .attr("id", "tooltip")
-    //     .attr("x", xPosition)
-    //     .attr("y", yPosition)
-    //     .attr("text-anchor", "middle")
-    //     .attr("font-family", "sans-serif")
-    //     .attr("font-size", "11px")
-    //     .attr("font-weight", "bold")
-    //     .attr("fill", "black")
-    //     .text(d.FATALITIES);
-    //
-    //         })
-    //
-    //
-    //     .on("mouseout", function(d){
-    //         d3.select(this)
-    //         .style("fill","yellow")
-    //         d3.select("#tooltip").remove();
-    //     });
-    //
-    //   }
-    //
-    // svg.append('circle')
-    //           .attr('cx', x_scale_ax(.1))
-    //           .attr('cy', y_scale_ax(.72))
-    //           .attr('r', 8)
-    //           .attr('fill', "yellow")
-    //
-    //
-    // svg.append('text')
-    //           .attr('class', 'label')
-    //           .attr('x', d => x_scale_ax(.11))
-    //           .attr('y', d => y_scale_ax(.73))
-    //           .attr('text-anchor', 'right')
-    //           .attr('font-size', 12)
-    //           .text(d => ' Violence against civilians');
 }

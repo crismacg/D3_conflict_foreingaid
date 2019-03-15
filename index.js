@@ -66,9 +66,10 @@ function myVis(data) {
                 .attr('width', w)
                 .attr('height', h)
 
+    d3.select("h2").text("Click over a country");
 
-    var scale  = 220;
-    var offset = [w/8.5, h/2.5];
+    var scale  = 290;
+    var offset = [w/9, h/2.5];
     var projection = d3.geoMercator()
                        .scale(scale)
                        .translate(offset);
@@ -82,14 +83,22 @@ function myVis(data) {
         var country_name = d.properties.ADM0_A3
 
        //Characteristics for scaling projection
-        if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 80) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 80)){temp =  1.5} else if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30)) {temp = 3} else  {temp = 7}
+       if  ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 80)
+           ||
+            (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 80))
+           {temp =  2} else if
+           ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30)
+           ||
+            (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30))
+           {temp = 4} else
+           {temp = 11}
 
                // Make new projection with scaling
         var center_ = d3.geoCentroid(d)
         var projection_temp = d3.geoMercator()
                                     .scale(scale*temp)
                                     .center(center_)
-                                    .translate([(w/2)-80,h/2+30])
+                                    .translate([(w/2)-60,h/2+30])
                                     ;
         var path_temp = d3.geoPath().projection(projection_temp);
 
@@ -103,7 +112,7 @@ function myVis(data) {
                .append("path")
                .transition()
                .attr("d", path_temp)
-               .style("fill", "#88D9D6")
+               .style("fill", '#A9A9A9')
                .attr("id",'large_country')
            }
 
@@ -111,13 +120,15 @@ function myVis(data) {
         var country_name = d.properties.ADM0_A3
         d3.select('h2')
                 .append("text")
-                .attr("text-anchor", "middle")
+                .attr("text-anchor", "left")
                 .attr("font-family", "Calibri")
                 .attr("font-size", "13px")
                 .attr("font-weight", "light")
                 .attr("fill", "#929292")
                 .attr('pointer-events', 'none')
-                .text(country_name)
+                .text(function() {
+                    return country_name
+                })
 
         }
     function update_points(data,d) {
@@ -126,36 +137,41 @@ function myVis(data) {
         if  ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 80)
             ||
              (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 80))
-            {temp =  1.5} else if
+            {temp =  2} else if
             ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30)
             ||
              (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30))
-            {temp = 3} else
-            {temp = 7}
+            {temp = 4} else
+            {temp = 11}
 
         // Make new projection with scaling
         var center_ = d3.geoCentroid(d)
         var projection_temp = d3.geoMercator()
-                                    .scale(scale*temp)
-                                    .center(center_)
-                                    .translate([(w/2)-80,h/2+30])
-                                    ;
+                                .scale(scale*temp)
+                                .center(center_)
+                                .translate([(w/2)-80,h/2+30])
+                                ;
         var path_temp = d3.geoPath().projection(projection_temp);
+
+        var div = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
 
         svg.selectAll("circle")
                    .attr("id", "temp_circle")
                    .data(dataset2.filter(function(b){
-                   return b.EVENT_ID_CNTY.substring(0,3) == d.properties.ADM0_A3;}))
+                   return b.EVENT_ID_CNTY.substring(0,3) == d.properties.ADM0_A3;}).filter(function(b){
+                   return b.EVENT_TYPE;}))
                    .enter()
                    .append("circle")
                    .attr("cx", function(d) {
                        return projection_temp([d.LONGITUDE, d.LATITUDE])[0];
                    })
                    .attr("cy", function(d) {
-                       return projection_temp([d.LONGITUDE, d.LATITUDE])[1] + 10;
+                       return projection_temp([d.LONGITUDE, d.LATITUDE])[1];
                    })
                    .attr("r", 5)
-                   .style("fill", "yellow")
+                   .style("fill", "#3F002D")
                    .style("opacity", 0.75)
 
             .on("mouseover", function(point){
@@ -163,27 +179,77 @@ function myVis(data) {
                var xPosition = projection_temp([point.LONGITUDE, point.LATITUDE])[0];
                var yPosition = projection_temp([point.LONGITUDE, point.LATITUDE])[1];
                d3.select(this)
-                   .style("fill","#88D9D6")
+                   .style("fill","red")
+
+               svg.append('rect')
+                   .attr("id", "tooltip_rect")
+                   .attr("x", xPosition -50)
+                   .attr("y", yPosition)
+                   .attr('width', 100)
+                   .attr('height', 20)
+                   .style("opacity", .8)
+                   .attr('fill', 'lightsteelblue')
+                   .attr('pointer-events', 'none');
 
                 svg.append("text")
                    .attr("id", "tooltip")
                    .attr("x", xPosition)
-                   .attr("y", yPosition)
+                   .attr("y", yPosition + 13)
                    .attr("text-anchor", "middle")
                    .attr("font-family", "Calibri")
                    .attr("font-size", "13px")
                    .attr("font-weight", "normal")
                    .attr("fill", "black")
-                   .text(point.FATALITIES)
+                   .attr('background-color', 'white')
+                   .attr('pointer-events', 'none')
+                   .text('Num. fatalities: '.concat(point.FATALITIES))
+
+                svg.append('rect')
+                       .attr("id", "tooltip_rect_actors")
+                       .attr("x",  x_scale_ax(.55))
+                       .attr("y", y_scale_ax(.8) )
+                       .attr('width', 400)
+                       .attr('height', 40)
+                       .style("opacity", .9)
+                       .attr('fill', 'lightsteelblue')
+                       .attr('pointer-events', 'none')
+                       .attr('stroke', 'steelblue');
+
+                svg.append("text")
+                   .attr("id", "tooltip_2")
+                   .attr("x", x_scale_ax(.55) + 200)
+                   .attr("y", y_scale_ax(.8) + 15 )
+                   .attr("text-anchor", "middle")
+                   .attr("font-family", "Calibri")
+                   .attr("font-size", "13px")
+                   .attr("font-weight", "normal")
+                   .attr("fill", "black")
+                   .attr('pointer-events', 'none')
+                   .text('Actor involved: '.concat(point.ACTOR1))
+
+                svg.append("text")
+                      .attr("id", "tooltip_3")
+                      .attr("x",  x_scale_ax(.55) + 200)
+                      .attr("y",  y_scale_ax(.8) + 30 )
+                      .attr("text-anchor", "middle")
+                      .attr("font-family", "Calibri")
+                      .attr("font-size", "13px")
+                      .attr("font-weight", "normal")
+                      .attr("fill", "black")
+                      .attr('pointer-events', 'none')
+                      .attr('pointer-events', 'none')
+                      .text('Second actor involved: '.concat(point.ACTOR2))
                    ;
 
                })
 
             .on("mouseout", function(point){
-                d3.select(this)
-                     .style("fill","yellow")
-                d3.select("#tooltip")
-                     .remove();
+                d3.select(this).style("fill","#3F002D")
+                d3.select("#tooltip").remove();
+                d3.select("#tooltip_rect").remove();
+                d3.select("#tooltip_rect_actors").remove();
+                d3.select("#tooltip_2").remove()
+                d3.select("#tooltip_3").remove();
                    });
              }
 
@@ -198,6 +264,7 @@ function myVis(data) {
         .append("path")
         .attr("d", path)
         .attr("class", "boundary")
+        .attr('stroke', 'white')
         .style("fill", function(d){
             var value = d.properties.funding;
             var type = d.properties.dac_category_name;
@@ -217,14 +284,14 @@ function myVis(data) {
                 var yPosition = projection([country_center][0])[1];
 
             svg.append("text")
-                    .attr("id", "tooltip")
+                    .attr("id", "tooltip_country")
                     .attr("x", xPosition)
                     .attr("y", yPosition)
                     .attr("text-anchor", "middle")
                     .attr("font-family", "Calibri")
                     .attr("font-size", "13px")
                     .attr("font-weight", "light")
-                    .attr("fill", "#929292")
+                    .attr("fill", "gray")
                     .attr('pointer-events', 'none')
                     .text(country.properties.ADM0_A3)
                 ;
@@ -239,12 +306,16 @@ function myVis(data) {
                     } else {
                         return "#ccc"
                     }})
-            d3.select("#tooltip").remove()
+            d3.select("#tooltip_country").remove()
 
         })
 
         .on('click', function(d) {
             svg.selectAll("#large_country").remove()
+            svg.selectAll("#tooltip").remove()
+            svg.selectAll("#tooltip_2").remove()
+            svg.selectAll("#tooltip_3").remove()
+
             svg.selectAll("circle").remove()
             d3.select("h2").text("");
             update_path(data, d);
@@ -253,5 +324,54 @@ function myVis(data) {
         });
 
 
+}
+
+
+
+function update_points(data){
+
+
+
+    return data
 
 }
+
+//
+// d3.select("#timeslide").on("input", function() {
+//     update(+this.value);
+// });
+//
+// function update(value) {
+//     document.getElementById("range").innerHTML=month[value];
+//     inputValue = month[value];
+//     d3.selectAll(".incident")
+//         .attr("fill", dateMatch);
+// }
+//
+// function dateMatch(data, value) {
+//     var d = new Date(data.properties.OPEN_DT);
+//     var m = month[d.getMonth()];
+//     if (inputValue == m) {
+//         this.parentElement.appendChild(this);
+//         return "red";
+//     } else {
+//         return "#999";
+//     };
+// }
+//
+// rodents.selectAll( "path" )
+//     .data( rodents_json.features )
+//     .enter()
+//     .append( "path" )
+//     .attr("fill", initialDate)
+//     .attr("stroke", "#ccc")
+//     .attr("d", geoPath)
+//     .attr("class","incident")
+//     .on("mouseover", function(d){
+//         d3.select("h2").text(d.properties.LOCATION_STREET_NAME);
+//         d3.select(this).attr("class","incident hover");
+//     })
+//     .on("mouseout", function(d){
+//         d3.select("h2").text("");
+//         d3.select(this).attr("class","incident");
+//     });

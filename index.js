@@ -16,17 +16,17 @@ d3.json('foreign_aid.geojson', function(error, data) {
 
 
 
-function myVis(data) {
-    d3.csv('sample_data.csv', function(error, data2) {
-        //Hand CSV data off to global var,
-        //so it's accessible later.
-        if (error){
-            console.log(error);
-        } else {
-            dataset2 = data2
-            //points(data2);
-        }
-    });
+  function myVis(data) {
+      d3.csv('sample_data.csv', function(error, data2) {
+          //Hand CSV data off to global var,
+          //so it's accessible later.
+          if (error){
+              console.log(error);
+          } else {
+              dataset2 = data2
+              //points(data2);
+          }
+      });
     console.log(data);
     console.log('hi!')
     const h = 560;
@@ -153,15 +153,10 @@ function myVis(data) {
                                 ;
         var path_temp = d3.geoPath().projection(projection_temp);
 
-        var div = d3.select("body").append("div")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
-
         svg.selectAll("circle")
                    .attr("id", "temp_circle")
                    .data(dataset2.filter(function(b){
-                   return b.EVENT_ID_CNTY.substring(0,3) == d.properties.ADM0_A3;}).filter(function(b){
-                   return b.EVENT_TYPE;}))
+                   return b.EVENT_ID_CNTY.substring(0,3) == d.properties.ADM0_A3;}))
                    .enter()
                    .append("circle")
                    .attr("cx", function(d) {
@@ -205,15 +200,15 @@ function myVis(data) {
                    .text('Num. fatalities: '.concat(point.FATALITIES))
 
                 svg.append('rect')
-                       .attr("id", "tooltip_rect_actors")
-                       .attr("x",  x_scale_ax(.55))
-                       .attr("y", y_scale_ax(.8) )
-                       .attr('width', 400)
-                       .attr('height', 40)
-                       .style("opacity", .9)
-                       .attr('fill', 'lightsteelblue')
-                       .attr('pointer-events', 'none')
-                       .attr('stroke', 'steelblue');
+                    .attr("id", "tooltip_rect_actors")
+                    .attr("x",  x_scale_ax(.55))
+                    .attr("y", y_scale_ax(.8) )
+                    .attr('width', 400)
+                    .attr('height', 40)
+                    .style("opacity", .9)
+                    .attr('fill', 'lightsteelblue')
+                    .attr('pointer-events', 'none')
+                    .attr('stroke', 'steelblue');
 
                 svg.append("text")
                    .attr("id", "tooltip_2")
@@ -228,17 +223,17 @@ function myVis(data) {
                    .text('Actor involved: '.concat(point.ACTOR1))
 
                 svg.append("text")
-                      .attr("id", "tooltip_3")
-                      .attr("x",  x_scale_ax(.55) + 200)
-                      .attr("y",  y_scale_ax(.8) + 30 )
-                      .attr("text-anchor", "middle")
-                      .attr("font-family", "Calibri")
-                      .attr("font-size", "13px")
-                      .attr("font-weight", "normal")
-                      .attr("fill", "black")
-                      .attr('pointer-events', 'none')
-                      .attr('pointer-events', 'none')
-                      .text('Second actor involved: '.concat(point.ACTOR2))
+                    .attr("id", "tooltip_3")
+                    .attr("x",  x_scale_ax(.55) + 200)
+                    .attr("y",  y_scale_ax(.8) + 30 )
+                    .attr("text-anchor", "middle")
+                    .attr("font-family", "Calibri")
+                    .attr("font-size", "13px")
+                    .attr("font-weight", "normal")
+                    .attr("fill", "black")
+                    .attr('pointer-events', 'none')
+                    .attr('pointer-events', 'none')
+                    .text('Second actor involved: '.concat(point.ACTOR2))
                    ;
 
                })
@@ -324,19 +319,34 @@ function myVis(data) {
         });
 
 
+        var conflict_types = ["Battle", "Riots/Protests", "Remote violence", "Violence against civilians"]
+
+        var dropdownChange = function() {
+            console.log(d3.select(this))
+            var type_conf = d3.select(this).property('EVENT_TYPE')
+
+            dataset2 = dataset2.filter(function(tc){
+                   return tc.EVENT_TYPE == type_conf;})
+            console.log(dataset2)
+                };
+
+        var dropdown = d3.select("#vis-container")
+                .insert("select", "svg")
+                .on("change", dropdownChange);
+
+            dropdown.selectAll("option")
+                .data(conflict_types)
+              .enter().append("option")
+                .attr("value", function (d) { return d; })
+                .text(function (d) {
+                    return d[0].toUpperCase() + d.slice(1,d.length); // capitalize 1st letter
+                            });
+
 }
 
 
 
-function update_points(data){
 
-
-
-    return data
-
-}
-
-//
 // d3.select("#timeslide").on("input", function() {
 //     update(+this.value);
 // });

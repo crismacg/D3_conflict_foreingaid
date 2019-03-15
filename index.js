@@ -306,6 +306,9 @@ d3.json('foreign_aid.geojson', function(error, data) {
         })
 
         .on('click', function(d) {
+
+
+
             svg.selectAll("#large_country").remove()
             svg.selectAll("#tooltip").remove()
             svg.selectAll("#tooltip_2").remove()
@@ -316,31 +319,30 @@ d3.json('foreign_aid.geojson', function(error, data) {
             update_path(data, d);
             update_points(data, d)
             update_text_header(data,d)
-        });
 
 
-        var conflict_types = ["Battle", "Riots/Protests", "Remote violence", "Violence against civilians"]
+            var conflict_types = ["Battle", "Riots/Protests", "Remote violence", "Violence against civilians"]
 
-        var dropdownChange = function() {
-            console.log(d3.select(this))
+            var dropdownChange = function() {
             var type_conf = d3.select(this).property('EVENT_TYPE')
 
             dataset2 = dataset2.filter(function(tc){
-                   return tc.EVENT_TYPE == type_conf;})
-            console.log(dataset2)
-                };
+                       return tc.EVENT_TYPE == type_conf;})
+                    };
 
-        var dropdown = d3.select("#vis-container")
-                .insert("select", "svg")
-                .on("change", dropdownChange);
+            var dropdown = d3.select("#vis-container")
+                    .insert("select", "svg")
+                    .on("change", dropdownChange);
 
-            dropdown.selectAll("option")
-                .data(conflict_types)
-              .enter().append("option")
-                .attr("value", function (d) { return d; })
-                .text(function (d) {
-                    return d[0].toUpperCase() + d.slice(1,d.length); // capitalize 1st letter
-                            });
+                dropdown.selectAll("option")
+                    .data(conflict_types)
+                    .enter().append("option")
+                    .attr("value", function (d) { return d; })
+                    .text(function (d) {
+                        return d[0].toUpperCase() + d.slice(1,d.length); // capitalize 1st letter
+                                });
+        });
+
 
 }
 

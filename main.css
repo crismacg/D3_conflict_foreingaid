@@ -1,96 +1,124 @@
 html,
-body {
+body{
   width: 100%;
   height: 100%;
 }
 
+h1{
+    font-family: Calibri;
+    color: grey;
+}
+
+h2{
+    position: absolute;
+    left: 500px;
+    top: 30px;
+    width: 100;
+    font-size: 1.5em;
+    font-weight: 100;
+    font-family: Calibri;
+    color: grey;
+}
+
+#fillButton{
+    position: absolute;
+    color: #grey;
+    justify-content: bottom;
+    font-size: .9em;
+    font-weight: 100;
+    font-family: Calibri;
+    color: grey;
+}
+
+#legend1{
+    position: absolute;
+    left: 700px;
+    top: 420px;
+    width: 300px;
+    color: #grey;
+    font-size: .9em;
+    font-weight: 100;
+    font-family: Calibri;
+    color: grey;
+    background: #FFFFE0;
+    font-size: 1em;
+    border-width: 1px;
+    border-radius: 2px;
+    pointer-events: none;
+}
 
 .first,
-.second {
+.second{
+margin: 10;
   width: 100%;
-  height: 90%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-h1 {
+.number{
+    position: absolute;
+    top: 160px;
+    left: 10px;
+    font-size: 1.2em;
+    font-weight: 100;
+    font-family: Calibri;
+    color: grey;
+}
+.slider{
+    position: absolute;
+    top: 180px;
+    left: 10px;
+
+}
+.title_slider{
+    position: absolute;
+    top: 200px;
+    left: 20px;
+    font-size: .9em;
+    font-weight: 100;
+    font-family: Calibri;
+    color: grey;
+
+}
+
+.grad_legend{
+    position: absolute;
+    top: 600px;
+    left: 20px;
+    font-size: .9em;
+    font-weight: 100;
     font-family: Calibri;
     color: grey;
 }
 
+#copyrightgithub{
+  position: absolute;
+  align-items: center;
+  color: #grey;
+  bottom: -30;
+  font-size: 6;
+  font-family: Calibri;
+  color: grey;
+}
 
-h2 {
-    position: absolute;
-    left: 250px;
-    top: 80px;
-    font-size: 1.3em;
-    font-weight: 100;
+
+.legendTitle {
+	font-size: 15px;
+	fill: grey;
+	font-weight: 12;
     font-family: Calibri;
-    color: #3F002D;
 
-
-.ngo {
- fill: #00999970;
 }
 
-path {
-  stroke: white;
-  stroke-width: 0.25px;
-  fill: grey;
+.axis path, .axis line {
+	fill: none;
+	shape-rendering: crispEdges;
 }
 
-path#large_country {
-  stroke: white;
-  stroke-width: 0.25px;
-  fill: grey;
-}
-
-.non-ngo {
- fill: #FFCC6670;
-}
-
-.non-ngo:hover {
-fill: orange;
-}
-
-.background {
-  fill: none;
-  pointer-events: all;
-}
-
-.feature {
-  fill: #ccc;
-  cursor: pointer;
-}
-
-.feature.active {
-  fill: orange;
-}
-
-.mesh {
-  fill: none;
-  stroke: #fff;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-
-#legend{
-	width:90px;
-	height:200px;
-}
-.legend {
-    font-size: 12px;
-    font-weight: normal;
-    text-anchor: left;
-}
-.legendcheckbox{
-	cursor: pointer;
-}
-
-#sliderContainer {
-    text-align: center;
-    position: relative;
-    top: 600px;
+.axis text {
+	font-family: Consolas, courier;
+ 	fill: #000;
+	font-size: 9pt;
 }

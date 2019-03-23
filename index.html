@@ -1,17 +1,50 @@
 <!DOCTYPE html>
+<link rel="stylesheet" type="text/css" href="main.css">
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Foreign aid map</title>
-  <link rel="stylesheet" type="text/css" href="main.css">
+
 </head>
 <body>
-  <h1>Foreign aid and conflict</h1>
+  <h1>Conflict incidents in 2018</h1>
+
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="index.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.13.0/d3-legend.js"></script>
+  <script src="https://d3js.org/d3.v4.0.0-alpha.40.min.js"></script>
+  <script src="https://unpkg.com/d3-simple-slider"></script>
+  <script src="https://d3js.org/d3-format.v1.min.js"></script>
+
+
+
+
+    <div id="legend2"></div>
+
+
+        <div id="tooltip"></div>
+    <div>
+        <div id="fillButton">
+          <input type="radio" name="fillButton" value="n_events"> Fill by number of recorded events<br>
+          <input type="radio" name="fillButton" value="n_deaths"> Fill by number of recorded fatalities<br>
+          <input type="radio" name="fillButton" value="n_deaths_100"> At least 1000 fatalities<br>
+          <div id="legend1"></div>
+        </div>
+        <div class="first"></div>
+        <div class="number"></div>
+        <div class="slider"></div>
+        <div class="title_slider">Fill by <br>minimum number of <br> reported fatalities</div>
+        <div class="grad_legend"></div>
+        <div class="legend_types"></div>
+
+        <h2> </h2>
+
+
+    </div>
+
+    <div id="copyrightgithub"> Source: ACLED dataset available at https://www.prio.org/Data/Armed-Conflict/" code for replication can be found in https://github.com/crismacg/D3_conflict_foreingaid, <br> By Cristina Mac Gregor Vanegas @crismacg</div>
+
 
 </body>
-    <h2> </h2>
-    <div class="first"></div>
-    <svg id="legend"></svg>
-    <script src="https://d3js.org/d3.v4.js"></script>
-    <script src="index.js"></script>
+
 </html>

@@ -1,9 +1,8 @@
-// import {geoPath, geoCylindricalStereographic} from 'd3-geo';
-// import {select} from 'd3-selection';
-// import {interpolateInferno} from 'd3-scale-chromatic';
-// import {scaleLinear} from 'd3-scale';
-
-d3.json('foreign_aid.geojson', function(error, data) {
+// Reference for buttons:  https://www.d3-graph-gallery.com/graph/interactivity_button.html
+// Reference for sliders https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
+// Reference for legends: http://bl.ocks.org/jhubley/17aa30fd98eb0cc7072f
+// Reference for gradient legends https://stackoverflow.com/questions/49739119/legend-with-smooth-gradient-and-corresponding-labels
+d3.json('data_aggregated.geojson', function(error, data) {
       //Hand CSV data off to global var,
       //so it's accessible later.
       if (error){
@@ -16,7 +15,7 @@ d3.json('foreign_aid.geojson', function(error, data) {
 
 
   function myVis(data) {
-      d3.csv('sample_data_v3.csv', function(error, data2) {
+      d3.csv('data_points.csv', function(error, data2) {
           //Hand CSV data off to global var,
           //so it's accessible later.
           if (error){
@@ -26,9 +25,6 @@ d3.json('foreign_aid.geojson', function(error, data) {
               //points(data2);
           }
       });
-    console.log(data);
-    console.log('hi!')
-
 
     const h = 560;
     const w = 1000;
@@ -39,20 +35,28 @@ d3.json('foreign_aid.geojson', function(error, data) {
 
     const plot_w = w - m.left - m.right;
     const plot_h = h - m.bottom - m.top;
-    const min_date = d3.min(data, function(d) {
-                return d.properties.fiscal_year;})
-    const max_date = d3.max(data, function(d) {
-                return d.properties.fiscal_year;})
 
-    var color = d3.scaleLinear()
-                  .range(["#ead3d7", "#e4a199"])
-                  .domain([d3.min(data, function(d) {
-                                return d.properties.funding;}),
-                           d3.max(data, function(d) {
-                                return d.properties.funding;})
+    var color_nevents = d3.scaleLog()
+                  .range(["white", "#3F002D"])
+                  .domain([d3.min(dataset, function(d) {
+                      if (d.properties.tot_n_events!== 'NA')
+                      {return d.properties.tot_n_events};}),
+
+                  d3.max(dataset, function(d) {
+                      if (d.properties.tot_n_events!== 'NA')
+                      {return d.properties.tot_n_events};})
                            ]);
+   var color_ndeaths = d3.scaleLog()
+                 .range(["white", "#3F002D"])
+                 .domain([d3.min(dataset, function(d) {
+                     if ((d.properties.tot_n_fatalities!== 'NA') && (d.properties.tot_n_fatalities!== 0))
+                     {return d.properties.tot_n_fatalities};}),
 
-    var color2 = d3.scaleOrdinal().range(["#009999","#990033","#FF9966","#88D9D6"]);
+                 d3.max(dataset, function(d) {
+                     if ((d.properties.tot_n_fatalities!== 'NA') && (d.properties.tot_n_fatalities!== 0))
+                     {return d.properties.tot_n_fatalities};})
+                          ]);
+
 
     var x_scale_ax = d3.scaleLinear()
                        .domain([1,0])
@@ -69,7 +73,7 @@ d3.json('foreign_aid.geojson', function(error, data) {
                 .attr('width', w)
                 .attr('height', h)
 
-    d3.select("h2").text("Click over a country");
+    d3.select("h2").text("Click on a country");
 
     var scale  = 290;
     var offset = [w/9, h/2.5];
@@ -87,7 +91,7 @@ d3.json('foreign_aid.geojson', function(error, data) {
         var projection_temp = d3.geoMercator()
                                     .scale(scale*temp)
                                     .center(centroid)
-                                    .translate([(w/2)-60,h/2+30])
+                                    .translate([(w/2)-20,h/2+30])
                                                         ;
         var path_temp = d3.geoPath().projection(projection_temp);
 
@@ -95,13 +99,14 @@ d3.json('foreign_aid.geojson', function(error, data) {
         var new_p = svg.selectAll("path#large_country")
                         .remove()
                         .data(data.filter(function(country){
-                               return country.properties.ADM0_A3 == c;}))
+                               return country.properties.COUNTRY == c;}));
+
+            new_p.exit().remove();
 
             new_p.enter()
                .append("path")
-               .transition()
                .attr("d", path_temp)
-               .style("fill", '#A9A9A9')
+               .style("fill",' #808080'	)
                .attr("id",'large_country')
            }
 
@@ -115,10 +120,7 @@ d3.json('foreign_aid.geojson', function(error, data) {
                 .attr("font-weight", "light")
                 .attr("fill", "#929292")
                 .attr('pointer-events', 'none')
-                .text(function() {
-                    return c
-                })
-
+                .text(function() {return c})
         }
     function update_points(data, temp, centroid, c, type_conf) {
             // Make new projection with scaling
@@ -126,18 +128,18 @@ d3.json('foreign_aid.geojson', function(error, data) {
             var projection_temp = d3.geoMercator()
                                     .scale(scale*temp)
                                     .center(centroid)
-                                    .translate([(w/2)-60,h/2+30])
+                                    .translate([(w/2)-20,h/2+30])
                                     ;
-            var path_temp = d3.geoPath().projection(projection_temp);
+            var path_temp = d3.geoPath()
+                            .projection(projection_temp);
 
-            svg.selectAll("circle")
-                    .exit()
+            var points = svg.selectAll("circle")
+                    .exit().remove()
                     .data(dataset2.filter(function(b){
-                    return b.EVENT_ID_CNTY.substring(0,3) == c;}).filter(function(d){
-                                    if(type_conf === 'All'){
-                                        return d
-                                    } else{
-                                    return d.EVENT_TYPE === type_conf;}}))
+                                return b.COUNTRY == c;})
+                                    .filter(function(d){
+                                if(type_conf === 'All'){return d}
+                                else{ return d.EVENT_TYPE === type_conf;}}))
                    .enter()
                    .append("circle")
                    .attr("id", function(d){
@@ -150,7 +152,13 @@ d3.json('foreign_aid.geojson', function(error, data) {
                    })
                    .attr("r", 5)
                    .style("fill", function(b){
-                        return color2(b.EVENT_TYPE)
+                       if (b.EVENT_TYPE === "Battle")
+                       {return "#990033"}
+                       else if (b.EVENT_TYPE === "Riots/Protests")
+                       {return "#e4a199"}
+                       else if (b.EVENT_TYPE === "Remote violence")
+                       {return "#88D9D6"}
+                       else if (b.EVENT_TYPE === "Violence against civilians") {return "#88b4d9"}
                     })
                    .style("opacity", 0.75)
 
@@ -169,12 +177,12 @@ d3.json('foreign_aid.geojson', function(error, data) {
                        .attr('width', 100)
                        .attr('height', 20)
                        .style("opacity", .8)
-                       .attr('fill', 'lightsteelblue')
+                       .attr('fill', '#FFFFE0')
                        .attr('pointer-events', 'none');
 
                     // Number of deaths - text
                     svg.append("text")
-                       .attr("id", "tooltip")
+                       .attr("id", "tooltip_small")
                        .attr("x", xPosition)
                        .attr("y", yPosition + 13)
                        .attr("text-anchor", "middle")
@@ -186,75 +194,54 @@ d3.json('foreign_aid.geojson', function(error, data) {
                        .attr('pointer-events', 'none')
                        .text('Num. fatalities: '.concat(point.FATALITIES))
 
-                    // Background for information
-                    svg.append('rect')
-                        .attr("id", "tooltip_rect_actors")
-                        .attr("x",  x_scale_ax(.55))
-                        .attr("y", y_scale_ax(.8) )
-                        .attr('width', 400)
-                        .attr('height', 40)
-                        .style("opacity", .9)
-                        .attr('fill', 'lightsteelblue')
-                        .attr('pointer-events', 'none')
-                        .attr('stroke', 'steelblue');
-
-                    // Text for information
-                    svg.append("text")
-                       .attr("id", "tooltip_2")
-                       .attr("x", x_scale_ax(.55) + 200)
-                       .attr("y", y_scale_ax(.8) + 15 )
-                       .attr("text-anchor", "middle")
+                    d3.selectAll('#legend1').append("text")
+                        .attr("id", "actor_1")
+                       .attr("text-anchor", "right")
+                       .attr("x", projection_temp(centroid)[1] -200)
+                       .attr("y", projection_temp(centroid)[2] - 200)
                        .attr("font-family", "Calibri")
                        .attr("font-size", "13px")
                        .attr("font-weight", "normal")
                        .attr("fill", "black")
-                       .attr('pointer-events', 'none')
-                       .text('Actor involved: '.concat(point.ACTOR1))
+                       .text('\n Actors involved: '.concat(point.ACTOR1).concat(' vs. ').concat(point.ACTOR2))
 
-                    // Text for information
-                    svg.append("text")
-                        .attr("id", "tooltip_3")
-                        .attr("x",  x_scale_ax(.55) + 200)
-                        .attr("y",  y_scale_ax(.8) + 30 )
-                        .attr("text-anchor", "middle")
-                        .attr("font-family", "Calibri")
-                        .attr("font-size", "13px")
-                        .attr("font-weight", "normal")
-                        .attr("fill", "black")
-                        .attr('pointer-events', 'none')
-                        .attr('pointer-events', 'none')
-                        .text('Second actor involved: '.concat(point.ACTOR2))
-                       ;
                    })
 
                 .on("mouseout", function(point){
                     // Return to original color
                     d3.select(this)
-                       .style("fill", function(d){
-                           return color2(d.EVENT_TYPE)
-                      })
-
+                        .style("fill", function(b){
+                            if (b.EVENT_TYPE.substr(0,6) === "Battle")
+                            {return "#990033"}
+                            else if (b.EVENT_TYPE === "Riots/Protests")
+                            {return "#e4a199"}
+                            else if (b.EVENT_TYPE === "Remote violence")
+                            {return "#88D9D6"}
+                            else if (b.EVENT_TYPE === "Violence against civilians") {return "#88b4d9"}
+                     })
                     // Remove tooltips
-                    d3.select("#tooltip").remove();
+                    d3.select("#tooltip_small").remove();
                     d3.select("#tooltip_rect").remove();
                     d3.select("#tooltip_rect_actors").remove();
                     d3.select("#tooltip_2").remove();
                     d3.select("#tooltip_3").remove();
+                    d3.select("#actor_1").remove();
+                    d3.select("#actor_2").remove();
 
                        });
 
-// Reference code from: http://bl.ocks.org/jhubley/17aa30fd98eb0cc7072f
-        var legend = d3.select("#legend")
-            .selectAll("text")
+
+        var legend = svg.selectAll("text")
             .exit().remove()
             .data(["Battle",
                     "Riots/Protests",
                     "Remote violence",
                     "Violence against civilians"])
                     ;
+
             legend.enter().append("text")
-                              .attr("x", 115)
-                              .attr("y", function(b,i){return  (10 + i * 15);})
+                              .attr("x", 15)
+                              .attr("y", function(b,i){return  ((10 + i * 15) +300);})
                               .attr("class", "legend")
                               .style("fill", "#777" )
                               .attr("font-family", "Calibri")
@@ -267,12 +254,19 @@ d3.json('foreign_aid.geojson', function(error, data) {
             legend.enter().append("rect")
                   .attr("width", 10)
                   .attr("height", 10)
-                  .attr("x", 100)
-                  .attr("y", function (b, i) { return (0 +i*15); })  // spacing
+                  .attr("x", 0)
+                  .attr("y", function (b, i) { return (0 +i*15) + 300
+                      ; })  // spacing
                   .attr("fill",function(b,i) {
-                      return color2(b);
+                      if (b === "Battle")
+                      {return "#990033"}
+                      else if (b === "Riots/Protests")
+                      {return "#e4a199"}
+                      else if (b === "Remote violence")
+                      {return "#88D9D6"}
+                      else if (b === "Violence against civilians") {return "#88b4d9"}
                   })
-                  .attr("class", function(d,i){return "legendcheckbox " + d})
+                  .attr("id", "legendcheckbox")
                   .on("click", function(d){
                         var type_conf = d
                         var type = type_conf.substr(0, 3)
@@ -281,146 +275,429 @@ d3.json('foreign_aid.geojson', function(error, data) {
 
                             // By completely upadting the points instead of changing the transparency/color, the user can get the 'latest' selected point to be on top of the others, which helps overcome to a point occlussion.
                                 update_points(data, temp, centroid, c, type_conf)
-                                //d3.selectAll('circle#' + type).style("fill", function(b){
-                                //     return color2(b.EVENT_TYPE)
-                                // })
 
-                                return color2(b);
-                                } else {
-                                //d3.selectAll('circle#' + type).style('fill', 'transparent')
+                                if (b === "Battle") {return "#990033"}
+                                else if (b === "Riots/Protests")
+                                {return "#e4a199"}
+                                else if (b === "Remote violence")
+                                {return "#88D9D6"}
+                                else if (b === "Violence against civilians") {return "#88b4d9"}
+                                }
+                                else {
                                 d3.selectAll('circle#' + type).remove();
                                 return "#ccc";
                             }
                                 })
                     })
 
+            svg.append("text")
+                              .attr("x", 0)
+                              .attr("y", 390)
+                              .style("fill", "#777" )
+                              .attr("text-anchor", "right")
+                              .attr("font-family", "Calibri")
+                              .attr("id", "temp")
+                              .attr("font-size", "12px")
+                              .attr("font-weight", "light")
+                              .text('Click on the checkboxes to filter events!')
+
 
 
 
         }
+    var background = svg.selectAll("path")
+            .data(data)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .attr('stroke', 'white')
+            .style("fill", function(d){
+                    return "lightgray"})
 
-    svg.selectAll("path")
-        .data(data.filter(function(d){
-            return d.properties.fiscal_year == 2018;}))
-        .enter()
-        .append("path")
-        .attr("d", path)
-        .attr('stroke', 'white')
-        .style("fill", function(d){
-            var value = d.properties.funding;
-            var type = d.properties.dac_category_name;
-            var year = d.properties.fiscal_year;
-            if(year == 2018){
-                return color(value)
-            } else {
-                return "#ccc"
-            }
-        })
-        .on("mouseover", function(country){
-            // Get country centroid to align text
-            country_center = d3.geoCentroid(country)
+            .on("mouseover", function(country){
+                           // Get country centroid to align text
+                           country_center = d3.geoCentroid(country)
 
-            // Change color on mouseover
-            temp = d3.select(this).style("fill","lightgray")
+                           // Change color on mouseover
+                           temp = d3.select(this).style("fill","lightgray")
 
-            // Get coordinates for centering text
-            var xPosition = projection([country_center][0])[0];
-            var yPosition = projection([country_center][0])[1];
+                           // Get coordinates for centering text
+                           var xPosition = projection([country_center][0])[0];
+                           var yPosition = projection([country_center][0])[1];
 
-            // Appending text
-            svg.append("text")
-                .attr("id", "tooltip_country")
-                .attr("x", xPosition)
-                .attr("y", yPosition)
-                .attr("text-anchor", "middle")
-                .attr("font-family", "Calibri")
-                .attr("font-size", "13px")
-                .attr("font-weight", "light")
-                .attr("fill", "gray")
-                .attr('pointer-events', 'none')
-                .text(country.properties.ADM0_A3);
-            })
+                           // Appending text
+                           svg.append("text")
+                               .attr("id", "tooltip_country")
+                               .attr("x", xPosition)
+                               .attr("y", yPosition)
+                               .attr("text-anchor", "middle")
+                               .attr("font-family", "Calibri")
+                               .attr("font-size", "13px")
+                               .attr("font-weight", "light")
+                               .attr("fill", "gray")
+                               .attr('pointer-events', 'none')
+                               .text(country.properties.ADM0_A3);
+                           })
+            .on("mouseout", function(country){
+                           d3.select("#tooltip_country").remove()
+                                   })
+            .on('click', function(d) {
 
-        .on("mouseout", function(country){
-            d3.select(this)
-               .style('fill', function(d){
-                    var value = d.properties.funding;
-                    if(value){
-                        return color(value)
-                    } else {
-                        return "#ccc"
-                    }})
-            d3.select("#tooltip_country").remove()
+                // Get scale for new map according to size of the country
+                if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 100)
+                || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 100)) {temp =  2}
+                else if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 60) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 60)) {temp = 3}
+                else if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30)) {temp = 6}
+                else {temp = 11}
 
-        })
+                // Get name of the country clicked on
+                var country_name = d.properties.COUNTRY
 
-        .on('click', function(d) {
+                // Get centroid of country to center
+                var centroid = d3.geoCentroid(d)
 
-            // Get scale for new map according to size of the country
-            if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 80)
-            || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 80)) {temp =  2}
-            else if ((Math.abs(path.bounds(d)[1][0] - path.bounds(d)[0][0]) > 30) || (Math.abs(path.bounds(d)[1][1] - path.bounds(d)[0][1]) > 30)) {temp = 4}
-            else {temp = 11}
+                // Reset existing variables
+                d3.selectAll("#click").remove();
+                d3.select("h2").text("");
+                svg.selectAll("#large_country").remove();
+                svg.selectAll("#tooltip_small").remove();
+                svg.selectAll("#temp").remove();
+                // svg.selectAll("#tooltip_3").remove();
+                d3.selectAll("circle").remove();
 
-            // Get name of the country clicked on
-            var country_name = d.properties.ADM0_A3
+                d3.selectAll("#Bat").exit().remove();
+                d3.selectAll("#Rio").exit().remove();
+                d3.selectAll("#Rem").exit().remove();
+                d3.selectAll("#Vio").exit().remove();
+                d3.selectAll("#legendcheckbox").exit().remove();
 
-            // Get centroid of country to center
-            var centroid = d3.geoCentroid(d)
+                // Update map with new scale and center
+                update_path(data, d, temp, centroid, country_name);
+                // Update points with new scale and center
+                update_points(data, temp, centroid, country_name, 'All')
 
-            // Reset existing variables
-            d3.selectAll("#click").remove();
-            d3.select("h2").text("");
-            svg.selectAll("#large_country").remove();
-            svg.selectAll("#tooltip").remove();
-            svg.selectAll("#tooltip_2").remove();
-            svg.selectAll("#tooltip_3").remove();
-            svg.selectAll("circle").remove();
+                // Update header
+                update_text_header(data,d, country_name)
 
-            // Update map with new scale and center
-            update_path(data, d, temp, centroid, country_name);
 
-            // Update points with new scale and center
+            });
 
-            update_points(data, temp, centroid, country_name, 'All')
+        var fill_by_thrsh = function(number){
+            slider.property("value", number);
+		    d3.select(".number").text(number);
+                  background.transition()
+                          .style("fill", function(d){
+                                value = d.properties.tot_n_fatalities
+                                if (value == "NA"){
+                                    return "lightgray"}
 
-            // Update header
-            update_text_header(data,d, country_name)
+                                else if (value >  number) {
+                                    return "#993333"} else
+                                    {return "lightgray"}}
+                            )
+                  background.on("mouseover", function(country){
+                                    // Get country centroid to align text
+                                country_center = d3.geoCentroid(country)
+
+                                // Change color on mouseover
+                                temp = d3.select(this).style("fill","lightgray")
+
+                                // Get coordinates for centering text
+                                var xPosition = projection([country_center][0])[0];
+                                var yPosition = projection([country_center][0])[1];
+
+                                // Appending text
+                                svg.append("text")
+                                    .attr("id", "tooltip_country")
+                                    .attr("x", xPosition)
+                                    .attr("y", yPosition)
+                                    .attr("text-anchor", "middle")
+                                    .attr("font-family", "Calibri")
+                                    .attr("font-size", "13px")
+                                    .attr("font-weight", "light")
+                                    .attr("fill", "gray")
+                                    .attr('pointer-events', 'none')
+                                    .text(country.properties.ADM0_A3);
+
+                                    })
+                          .on("mouseout", function(country){
+                              d3.select(this)
+                              .style("fill", function(d){
+                                    value = d.properties.tot_n_fatalities
+                                    if (value == "NA"){
+                                        return "lightgray"}
+
+                                    else if (value > number) {
+                                        return "#993333"} else
+                                        {return "lightgray"}}
+                                )
+                              d3.select("#tooltip_country").remove()
+                              })
+                      }
+function changeColor() {
+  var type_of_fill=d3.select('input[name="fillButton"]:checked').node().value;
+
+  if (type_of_fill == 'n_events'){
+      background.transition()
+                .style("fill", function(d){
+                          value = d.properties.tot_n_events
+                          if (value !== "NA"){
+                              return color_nevents(value)}
+                          else{return "lightgray"}
+
+                      });
+
+     background.on("mouseover", function(country){
+                    // Get country centroid to align text
+                    country_center = d3.geoCentroid(country)
+
+                    // Change color on mouseover
+                    temp = d3.select(this).style("fill","lightgray")
+
+                    // Get coordinates for centering text
+                    var xPosition = projection([country_center][0])[0];
+                    var yPosition = projection([country_center][0])[1];
+
+                    // Appending text
+                    svg.append("text")
+                        .attr("id", "tooltip_country")
+                        .attr("x", xPosition)
+                        .attr("y", yPosition)
+                        .attr("text-anchor", "middle")
+                        .attr("font-family", "Calibri")
+                        .attr("font-size", "13px")
+                        .attr("font-weight", "light")
+                        .attr("fill", "gray")
+                        .attr('pointer-events', 'none')
+                        .text(country.properties.ADM0_A3);
+
+                    })
+                .on("mouseout", function(country){
+                    d3.select(this)
+                      .style("fill", function(d){
+                                value = d.properties.tot_n_events
+                                if (value !== "NA"){
+                                    return color_nevents(value)}
+                                else{return "lightgray"}})
+                    d3.select("#tooltip_country").remove()
+                            })
+    var svgLegend = d3.select('.grad_legend').append('svg')
+        .attr("width",600);
+    var defs = svgLegend.append('defs');
+
+        // append a linearGradient element to the defs and give it a unique id
+    var linearGradient = defs.append('linearGradient')
+            .attr('id', 'linear-gradient');
+
+    // horizontal gradient
+    linearGradient
+      .attr("x1", "0%")
+      .attr("y1", "0%")
+      .attr("x2", "100%")
+      .attr("y2", "0%");
+
+    // append multiple color stops by using D3's data/enter step
+    linearGradient.selectAll("stop")
+      .data([
+        {offset: "0%", color: "white"},
+        {offset: "100%", color: "#3F002D"}
+      ])
+      .enter().append("stop")
+      .attr("offset", function(d) {
+        return d.offset;
+      })
+      .attr("stop-color", function(d) {
+        return d.color;
+      });
+
+    // append title
+    svgLegend.append("text")
+      .attr("class", "legendTitle")
+      .attr("x", 0)
+      .attr("y", 30)
+      .style("text-anchor", "left")
+      .text("Gradient scale");
+
+    // draw the rectangle and fill with gradient
+    svgLegend.append("rect")
+      .attr("x", 10)
+      .attr("y", 0)
+      .attr("width", 400)
+      .attr("height", 10)
+      .style("fill", "url(#linear-gradient)");
+
+
+    svgLegend.append("text")
+        .attr("class", "legendTitle")
+        .attr("x", 0)
+        .attr("y", 10)
+        .style("text-anchor", "left")
+        .text(function(){
+            return d3.min(dataset, function(d) {
+                if (d.properties.tot_n_events!== 'NA')
+                {return d.properties.tot_n_events};})
         });
+    var format = d3.format("$,");
+    svgLegend.append("text")
+            .attr("class", "legendTitle")
+            .attr("x", 410)
+            .attr("y", 10)
+            .style("text-anchor", "left")
+            .text(function(){
+                return d3.max(dataset, function(d) {
+                    if (d.properties.tot_n_events!== 'NA')
+                    {return d.properties.tot_n_events};})
+            });
 
-        // To do:
-        // 1. add sliderTime
-        // 2. update all with slider
-        // 3. remove and update legend
-        // 5. add barchart
-        // 6. add background
+  } else if (type_of_fill == 'n_deaths'){
+
+        background.transition()
+                .style("fill", function(d){
+                      value = d.properties.tot_n_fatalities
+                      if (value == "NA"){
+                          return "lightgray"}
+                      else if (value == '0') {
+                          return "lightgray"}
+                      else {return color_ndeaths(value)}
+                  })
+        background.on("mouseover", function(country){
+                          // Get country centroid to align text
+                      country_center = d3.geoCentroid(country)
+
+                      // Change color on mouseover
+                      temp = d3.select(this).style("fill","lightgray")
+
+                      // Get coordinates for centering text
+                      var xPosition = projection([country_center][0])[0];
+                      var yPosition = projection([country_center][0])[1];
+
+                      // Appending text
+                      svg.append("text")
+                          .attr("id", "tooltip_country")
+                          .attr("x", xPosition)
+                          .attr("y", yPosition)
+                          .attr("text-anchor", "middle")
+                          .attr("font-family", "Calibri")
+                          .attr("font-size", "13px")
+                          .attr("font-weight", "light")
+                          .attr("fill", "gray")
+                          .attr('pointer-events', 'none')
+                          .text(country.properties.ADM0_A3);
+
+                          })
+                .on("mouseout", function(country){
+                    d3.select(this)
+                        .style("fill", function(d){
+                              value = d.properties.tot_n_fatalities
+                              if (value == "NA"){
+                                  return "lightgray"}
+                              else if (value == '0') {
+                                  return "lightgray"}
+                              else {return color_ndeaths(value)}
+                          })
+                    d3.select("#tooltip_country").remove()
+                    })
+
+        var svgLegend = d3.select('.grad_legend').append('svg')
+            .attr("width",600);
+        var defs = svgLegend.append('defs');
+
+            // append a linearGradient element to the defs and give it a unique id
+        var linearGradient = defs.append('linearGradient')
+                .attr('id', 'linear-gradient');
+
+        // horizontal gradient
+        linearGradient
+          .attr("x1", "0%")
+          .attr("y1", "0%")
+          .attr("x2", "100%")
+          .attr("y2", "0%");
+
+        // append multiple color stops by using D3's data/enter step
+        linearGradient.selectAll("stop")
+          .data([
+            {offset: "0%", color: "white"},
+            {offset: "100%", color: "#3F002D"}
+          ])
+          .enter().append("stop")
+          .attr("offset", function(d) {
+            return d.offset;
+          })
+          .attr("stop-color", function(d) {
+            return d.color;
+          });
+
+        // append title
+        svgLegend.append("text")
+          .attr("class", "legendTitle")
+          .attr("x", 0)
+          .attr("y", 30)
+          .style("text-anchor", "left")
+          .text("Gradient scale");
+
+        // draw the rectangle and fill with gradient
+        svgLegend.append("rect")
+          .attr("x", 10)
+          .attr("y", 0)
+          .attr("width", 400)
+          .attr("height", 10)
+          .style("fill", "url(#linear-gradient)");
+
+        svgLegend.append("text")
+            .attr("class", "legendTitle")
+            .attr("x", 0)
+            .attr("y", 10)
+            .style("text-anchor", "left")
+            .text(function(){
+                return d3.min(dataset, function(d) {
+                    if (d.properties.tot_n_fatalities!== 'NA')
+                    {return d.properties.tot_n_fatalities};})
+            });
+        var format = d3.format("$,");
+        svgLegend.append("text")
+                .attr("class", "legendTitle")
+                .attr("x", 410)
+                .attr("y", 10)
+                .style("text-anchor", "left")
+                .text(function(){
+                    return d3.max(dataset, function(d) {
+                        if (d.properties.tot_n_fatalities!== 'NA')
+                        {return d.properties.tot_n_fatalities};})
+                });
 
 
-        // var sliderTime = d3
-        //         .sliderBottom()
-        //         .min(d3.min(data.properties.fiscal_year))
-        //         .max(d3.max(data.properties.fiscal_year))
-        //         .step(1000 * 60 * 60 * 24 * 365)
-        //         .width(300)
-        //         .tickFormat(d3.timeFormat('%Y'))
-        //         .tickValues(data.properties.fiscal_year)
-        //         .default(new Date(2018))
-        //         .on('onchange', val => {
-        //           d3.select('p#value-time').text(d3.timeFormat('%Y')(val));
-        //         });
-        //
-        // var gTime = d3
-        //     .select('div#slider-time')
-        //     .append('svg')
-        //     .attr('width', 500)
-        //     .attr('height', 100)
-        //     .append('g')
-        //     .attr('transform', 'translate(30,30)');
-        //
-        // gTime.call(sliderTime);
-        //
-        // d3.select('p#value-time')
-        //   .text(d3.timeFormat('%Y')(sliderTime.value()));
+    } else if (type_of_fill == 'n_deaths_100'){
+                fill_by_thrsh('100')
+
+            }
+
+            }
+
+    //Event listener
+    d3.select("#fillButton").on("change", changeColor)
+    // Create legends
+
+    var slider = d3.select(".slider")
+    		.append("input")
+    			.attr("type", "range")
+    			.attr("min", 0)
+    			.attr("max", 3000)
+    			.attr("step", 150)
+    			.on("input", function() {
+    				var val = this.value;
+    				fill_by_thrsh(val.toString());
+    			});
+
+// Code for legends referenced: https://stackoverflow.com/questions/49739119/legend-with-smooth-gradient-and-corresponding-labels
+
 
 
 }
+
+
+
+
+// tooltip
+// scales
+// boton de ver solo con mas de una muerte
+// slider de anios

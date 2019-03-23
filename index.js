@@ -516,7 +516,7 @@ function changeColor() {
       .attr("x", 0)
       .attr("y", 30)
       .style("text-anchor", "left")
-      .text("Gradient scale");
+      .text("Gradient scale - by number of events");
 
     // draw the rectangle and fill with gradient
     svgLegend.append("rect")
@@ -603,7 +603,7 @@ function changeColor() {
         var defs = svgLegend.append('defs');
 
             // append a linearGradient element to the defs and give it a unique id
-        var linearGradient = defs.append('linearGradient')
+        var linearGradient = defs.append('logGradient')
                 .attr('id', 'linear-gradient');
 
         // horizontal gradient
@@ -633,7 +633,7 @@ function changeColor() {
           .attr("x", 0)
           .attr("y", 30)
           .style("text-anchor", "left")
-          .text("Gradient scale");
+          .text("Gradient scale - by number of deaths");
 
         // draw the rectangle and fill with gradient
         svgLegend.append("rect")

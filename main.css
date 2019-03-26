@@ -105,6 +105,7 @@ left: 20px;
 
 
 .legendTitle {
+    position: absolute;
 	font-size: 15px;
 	fill: grey;
 	font-weight: 12;

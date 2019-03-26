@@ -383,6 +383,7 @@ d3.json('data_aggregated.geojson', function(error, data) {
             });
 
         var fill_by_thrsh = function(number){
+            d3.selectAll('.legendgroup').remove()
             slider.property("value", number);
 		    d3.select(".number").text(number);
                   background.transition()
@@ -438,6 +439,8 @@ function changeColor() {
   var type_of_fill=d3.select('input[name="fillButton"]:checked').node().value;
 
   if (type_of_fill == 'n_events'){
+      d3.selectAll('.legendgroup').remove()
+
       background.transition()
                 .style("fill", function(d){
                           value = d.properties.tot_n_events
@@ -482,14 +485,12 @@ function changeColor() {
                     d3.select("#tooltip_country").remove()
                             })
     var svgLegend = d3.select('.grad_legend').append('svg')
-        .attr("width",600);
+            .attr('class', 'legendgroup')
+            .attr("width",600);
     var defs = svgLegend.append('defs');
 
-        // append a linearGradient element to the defs and give it a unique id
     var linearGradient = defs.append('linearGradient')
             .attr('id', 'linear-gradient');
-
-    // horizontal gradient
     linearGradient
       .attr("x1", "0%")
       .attr("y1", "0%")
@@ -524,6 +525,7 @@ function changeColor() {
       .attr("y", 0)
       .attr("width", 400)
       .attr("height", 10)
+      .attr("class", "legendTitle")
       .style("fill", "url(#linear-gradient)");
 
 
@@ -537,7 +539,6 @@ function changeColor() {
                 if (d.properties.tot_n_events!== 'NA')
                 {return d.properties.tot_n_events};})
         });
-    var format = d3.format("$,");
     svgLegend.append("text")
             .attr("class", "legendTitle")
             .attr("x", 410)
@@ -550,6 +551,7 @@ function changeColor() {
             });
 
   } else if (type_of_fill == 'n_deaths'){
+        d3.selectAll('.legendgroup').remove()
 
         background.transition()
                 .style("fill", function(d){
@@ -598,71 +600,72 @@ function changeColor() {
                     d3.select("#tooltip_country").remove()
                     })
 
-        var svgLegend = d3.select('.grad_legend').append('svg')
-            .attr("width",600);
-        var defs = svgLegend.append('defs');
 
-            // append a linearGradient element to the defs and give it a unique id
-        var linearGradient = defs.append('logGradient')
-                .attr('id', 'linear-gradient');
+                    var svgLegend = d3.select('.grad_legend').append('svg')
+                            .attr('class', 'legendgroup')
+                            .attr("width",600);
+                    var defs = svgLegend.append('defs');
 
-        // horizontal gradient
-        linearGradient
-          .attr("x1", "0%")
-          .attr("y1", "0%")
-          .attr("x2", "100%")
-          .attr("y2", "0%");
+                    var linearGradient = defs.append('linearGradient')
+                            .attr('id', 'linear-gradient');
+                    linearGradient
+                      .attr("x1", "0%")
+                      .attr("y1", "0%")
+                      .attr("x2", "100%")
+                      .attr("y2", "0%");
 
-        // append multiple color stops by using D3's data/enter step
-        linearGradient.selectAll("stop")
-          .data([
-            {offset: "0%", color: "white"},
-            {offset: "100%", color: "#3F002D"}
-          ])
-          .enter().append("stop")
-          .attr("offset", function(d) {
-            return d.offset;
-          })
-          .attr("stop-color", function(d) {
-            return d.color;
-          });
+                    // append multiple color stops by using D3's data/enter step
+                    linearGradient.selectAll("stop")
+                      .data([
+                        {offset: "0%", color: "white"},
+                        {offset: "100%", color: "#3F002D"}
+                      ])
+                      .enter().append("stop")
+                      .attr("offset", function(d) {
+                        return d.offset;
+                      })
+                      .attr("stop-color", function(d) {
+                        return d.color;
+                      });
 
-        // append title
-        svgLegend.append("text")
-          .attr("class", "legendTitle")
-          .attr("x", 0)
-          .attr("y", 30)
-          .style("text-anchor", "left")
-          .text("Gradient scale - by number of deaths");
+                    // append title
+                    svgLegend.append("text")
+                      .attr("class", "legendTitle")
+                      .attr("x", 0)
+                      .attr("y", 30)
+                      .style("text-anchor", "left")
+                      .text("Gradient scale - by number of events");
 
-        // draw the rectangle and fill with gradient
-        svgLegend.append("rect")
-          .attr("x", 10)
-          .attr("y", 0)
-          .attr("width", 400)
-          .attr("height", 10)
-          .style("fill", "url(#linear-gradient)");
+                    // draw the rectangle and fill with gradient
+                    svgLegend.append("rect")
+                      .attr("x", 10)
+                      .attr("y", 0)
+                      .attr("width", 400)
+                      .attr("height", 10)
+                      .attr("class", "legendTitle")
+                      .style("fill", "url(#linear-gradient)");
 
-        svgLegend.append("text")
-            .attr("class", "legendTitle")
-            .attr("x", 0)
-            .attr("y", 10)
-            .style("text-anchor", "left")
-            .text(function(){
-                return d3.min(dataset, function(d) {
-                    if (d.properties.tot_n_fatalities!== 'NA')
-                    {return d.properties.tot_n_fatalities};})
-            });
-        var format = d3.format("$,");
-        svgLegend.append("text")
-                .attr("class", "legendTitle")
-                .attr("x", 410)
-                .attr("y", 10)
-                .style("text-anchor", "left")
-                .text(function(){
-                    return d3.max(dataset, function(d) {
-                        if (d.properties.tot_n_fatalities!== 'NA')
-                        {return d.properties.tot_n_fatalities};})
+
+                    svgLegend.append("text")
+                        .attr("class", "legendTitle")
+                        .attr("x", 0)
+                        .attr("y", 10)
+                        .style("text-anchor", "left")
+                        .text(function(){
+                            return d3.min(dataset, function(d) {
+                                if (d.properties.tot_n_fatalities!== 'NA')
+                                {return d.properties.tot_n_fatalities};})
+                        });
+                    svgLegend.append("text")
+                            .attr("class", "legendTitle")
+                            .attr("x", 410)
+                            .attr("y", 10)
+                            .style("text-anchor", "left")
+                            .text(function(){
+                                return d3.max(dataset, function(d) {
+                                    if (d.properties.tot_n_fatalities!== 'NA')
+                                    {return d.properties.tot_n_fatalities};})
+
                 });
 
 
@@ -684,6 +687,7 @@ function changeColor() {
     			.attr("max", 3000)
     			.attr("step", 150)
     			.on("input", function() {
+                    d3.selectAll('.legendTitle').remove();
     				var val = this.value;
     				fill_by_thrsh(val.toString());
     			});
